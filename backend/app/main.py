@@ -1,37 +1,69 @@
-from typing import Annotated
+"""Application factory: wires config → LLM client → service → routes."""
 
-from fastapi import Depends, FastAPI
+import logging
+
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from fastapi.responses import JSONResponse
 
-from app.config import LLMConfig, Provider, get_settings, resolve_llm_config
+from app.api import router
+from app.config import LLMConfig, get_settings, resolve_llm_config
+from app.llm import LLMClient, LLMError, OpenAIClient
+from app.llm.demo import DemoClient
+from app.services import InterviewNotFound, InterviewService, InvalidState
+from app.storage import InMemoryInterviewRepository
 
-
-def get_llm_config() -> LLMConfig:
-    return resolve_llm_config(get_settings())
-
-
-class ConfigResponse(BaseModel):
-    """Public runtime info for the UI badge. Never includes secrets."""
-
-    provider: Provider
-    model: str
-    demo: bool
+logger = logging.getLogger(__name__)
 
 
-def create_app() -> FastAPI:
-    app = FastAPI(title="Mini AI Interviewer", version="0.1.0")
+def build_llm(config: LLMConfig) -> LLMClient:
+    return DemoClient() if config.demo else OpenAIClient(config)
+
+
+def error(status_code: int, message: str) -> JSONResponse:
+    return JSONResponse(status_code=status_code, content={"detail": message})
+
+
+def create_app(
+    *,
+    llm_config: LLMConfig | None = None,
+    llm: LLMClient | None = None,
+) -> FastAPI:
+    settings = get_settings()
+    llm_config = llm_config or resolve_llm_config(settings)
+    llm = llm or build_llm(llm_config)
+
+    app = FastAPI(
+        title="Mini AI Interviewer",
+        version="0.1.0",
+        description="Short, adaptive AI-led interviews with an AI-generated summary.",
+    )
+    app.state.llm_config = llm_config
+    app.state.service = InterviewService(llm, llm_config, InMemoryInterviewRepository())
+
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=get_settings().cors_origins,
+        allow_origins=settings.cors_origins,
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    app.include_router(router)
 
-    @app.get("/api/config", response_model=ConfigResponse, tags=["meta"])
-    def read_config(cfg: Annotated[LLMConfig, Depends(get_llm_config)]) -> ConfigResponse:
-        return ConfigResponse(provider=cfg.provider, model=cfg.model, demo=cfg.demo)
+    @app.exception_handler(InterviewNotFound)
+    def _not_found(_: Request, __: InterviewNotFound) -> JSONResponse:
+        return error(status.HTTP_404_NOT_FOUND, "Interview not found")
 
+    @app.exception_handler(InvalidState)
+    def _invalid_state(_: Request, exc: InvalidState) -> JSONResponse:
+        return error(status.HTTP_409_CONFLICT, str(exc))
+
+    @app.exception_handler(LLMError)
+    def _llm_error(_: Request, exc: LLMError) -> JSONResponse:
+        logger.error("LLM failure: %s", exc)
+        return error(status.HTTP_502_BAD_GATEWAY, f"The AI model could not respond: {exc}")
+
+    mode = "demo mode" if llm_config.demo else f"{llm_config.provider} · {llm_config.model}"
+    logger.info("Mini AI Interviewer ready (%s)", mode)
     return app
 
 
