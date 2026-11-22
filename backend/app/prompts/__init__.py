@@ -16,7 +16,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from app.models import Objective
+from app.models import Interview, Objective
 
 PROMPTS_DIR = Path(__file__).parent
 
@@ -58,5 +58,44 @@ def planner_message(topic: str, num_objectives: int) -> str:
             tag("topic", topic),
             tag("objective_count", str(num_objectives)),
             f"Create the interview plan with exactly {num_objectives} objectives.",
+        ]
+    )
+
+
+# ── Interviewer ───────────────────────────────────────────────
+
+
+class InterviewerOutput(BaseModel):
+    lead_in: str
+    question: str
+
+
+def format_transcript(interview: Interview) -> str:
+    if not interview.turns:
+        return "(no questions asked yet)"
+    blocks = []
+    for n, turn in enumerate(interview.turns, start=1):
+        theme = interview.plan[turn.objective_index].theme
+        blocks.append(
+            f"Q{n} [objective {turn.objective_index + 1}: {theme}]: {turn.question}\n"
+            f"A{n}: {turn.answer or '(not answered yet)'}"
+        )
+    return "\n\n".join(blocks)
+
+
+def interviewer_message(interview: Interview, objective_index: int) -> str:
+    objective = interview.plan[objective_index]
+    number, total = objective_index + 1, len(interview.plan)
+    remaining = total - number
+    position = "first" if number == 1 else "final" if remaining == 0 else "middle"
+    return "\n\n".join(
+        [
+            tag("topic", interview.topic),
+            tag("research_goal", interview.research_goal),
+            tag("plan", format_plan(interview.plan)),
+            tag("transcript", format_transcript(interview)),
+            tag("current_objective", f"{number}. {objective.theme}: {objective.goal}"),
+            tag("progress", f"Question {number} of {total} ({position}; {remaining} remaining)"),
+            "Write the lead-in and the next question.",
         ]
     )
