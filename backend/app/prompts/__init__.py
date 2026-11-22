@@ -99,3 +99,18 @@ def interviewer_message(interview: Interview, objective_index: int) -> str:
             "Write the lead-in and the next question.",
         ]
     )
+
+
+# ── Analyst ───────────────────────────────────────────────────
+
+
+def analyst_message(interview: Interview) -> str:
+    return "\n\n".join(
+        [
+            tag("topic", interview.topic),
+            tag("research_goal", interview.research_goal),
+            tag("plan", format_plan(interview.plan)),
+            tag("transcript", format_transcript(interview)),
+            f"Summarise this interview. Return exactly {len(interview.plan)} findings.",
+        ]
+    )
