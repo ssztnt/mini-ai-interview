@@ -1,0 +1,158 @@
+{
+  "id": "445b04e51a70",
+  "topic": "AI in the workplace",
+  "status": "completed",
+  "provider": "foundry",
+  "model": "gpt-5.4-mini",
+  "research_goal": "Understand how the participant experiences AI in their workplace, including how it fits into their day-to-day work, how they make use of it, and what it changes for them.",
+  "plan": [
+    {
+      "theme": "Current use",
+      "goal": "Understand how AI shows up in the participant’s regular work and what they use it for today."
+    },
+    {
+      "theme": "Getting started",
+      "goal": "Learn how the participant first began using AI at work and what prompted that change."
+    },
+    {
+      "theme": "Work impact",
+      "goal": "Explore how AI affects the participant’s workflow, effort, or confidence in getting work done."
+    },
+    {
+      "theme": "Concerns and hopes",
+      "goal": "Understand what the participant worries about or would want to change about AI in their workplace experience."
+    }
+  ],
+  "turns": [
+    {
+      "objective_index": 0,
+      "lead_in": "Thanks for joining—I'd like to hear about AI in your workplace.",
+      "question": "How does AI show up in your regular work these days?",
+      "answer": "I use ChatGPT every morning to draft emails and summarise long threads. It probably saves me an hour a day.",
+      "asked_at": "2026-11-22T09:14:05.250874Z",
+      "answered_at": "2026-11-22T09:14:05.603208Z"
+    },
+    {
+      "objective_index": 1,
+      "lead_in": "You use ChatGPT as part of your morning routine.",
+      "question": "What was happening at work when you first decided to start using it?",
+      "answer": "A colleague showed me how it summarised a 40-page RFP in seconds. I was sceptical, but I tried it on my own backlog that same week.",
+      "asked_at": "2026-11-22T09:14:06.681873Z",
+      "answered_at": "2026-11-22T09:14:07.369829Z"
+    },
+    {
+      "objective_index": 2,
+      "lead_in": "That first demo and the backlog test sound like a real turning point.",
+      "question": "How has using ChatGPT changed the way you get through your morning work?",
+      "answer": "Our team ships reports twice as fast now. Honestly the hallucinations drive me crazy though, so I always double check numbers before anything goes to a client.",
+      "asked_at": "2026-11-22T09:14:08.320088Z",
+      "answered_at": "2026-11-22T09:14:08.704865Z"
+    },
+    {
+      "objective_index": 3,
+      "lead_in": "You’re moving faster, while still checking the numbers carefully.",
+      "question": "What’s the main change you’d want in ChatGPT for your client work?",
+      "answer": "I hope it gets more reliable, but I worry about junior roles. Writing first drafts is how I learned the job.",
+      "asked_at": "2026-11-22T09:14:09.783006Z",
+      "answered_at": "2026-11-22T09:14:10.040954Z"
+    }
+  ],
+  "summary": {
+    "overview": "The participant uses ChatGPT as a regular morning tool to speed up email drafting and summarising, and says it saves substantial time. They were initially sceptical but became willing to try it after seeing a colleague use it, and now view it as useful but unreliable, especially for client-facing work. Their overall stance is mixed: they value the efficiency gains while worrying about hallucinations and what AI may mean for junior roles.",
+    "findings": [
+      {
+        "objective": "Current use",
+        "finding": "The participant uses ChatGPT every morning for drafting emails and summarising long threads, and sees it as a meaningful time-saver.",
+        "quote": "I use ChatGPT every morning to draft emails and summarise long threads."
+      },
+      {
+        "objective": "Getting started",
+        "finding": "The participant started using AI after a colleague demonstrated a fast RFP summary, and initial scepticism gave way to trying it on their own work the same week.",
+        "quote": "A colleague showed me how it summarised a 40-page RFP in seconds. I was sceptical, but I tried it"
+      },
+      {
+        "objective": "Work impact",
+        "finding": "ChatGPT has sped up the team's report production, but the participant still double-checks outputs because errors make them wary.",
+        "quote": "Our team ships reports twice as fast now."
+      },
+      {
+        "objective": "Concerns and hopes",
+        "finding": "The participant wants ChatGPT to be more reliable and is concerned it could reduce opportunities for junior staff to learn through first-draft writing.",
+        "quote": "I worry about junior roles. Writing first drafts is how I learned the job."
+      }
+    ],
+    "themes": [
+      {
+        "name": "time savings",
+        "description": "The participant repeatedly emphasizes how AI reduces routine work and speeds up output."
+      },
+      {
+        "name": "trust and verification",
+        "description": "They rely on ChatGPT for drafts and summaries but keep checking its accuracy before client use."
+      },
+      {
+        "name": "learning and roles",
+        "description": "They connect AI not only to efficiency but also to how people, especially juniors, develop skills on the job."
+      }
+    ],
+    "key_points": [
+      "ChatGPT is part of the participant's daily morning workflow.",
+      "A colleague's demonstration was the key trigger for adoption.",
+      "The participant reports faster report delivery but remains cautious about errors.",
+      "Reliability is the main desired improvement for client work.",
+      "They are worried about how AI could affect junior-level learning opportunities."
+    ],
+    "sentiment": {
+      "label": "mixed",
+      "score": 0.2,
+      "rationale": "The participant describes clear productivity benefits and time savings, but also strong concerns about hallucinations and impacts on junior roles."
+    },
+    "emotions": [
+      {
+        "name": "scepticism",
+        "intensity": "medium"
+      },
+      {
+        "name": "frustration",
+        "intensity": "high"
+      },
+      {
+        "name": "worry",
+        "intensity": "medium"
+      }
+    ],
+    "keywords": [
+      "chatgpt",
+      "email drafting",
+      "summaries",
+      "time savings",
+      "hallucinations",
+      "client work",
+      "junior roles"
+    ]
+  },
+  "analysis": {
+    "method": "VADER + YAKE",
+    "sentiment_label": "mixed",
+    "sentiment_score": -0.11,
+    "answer_scores": [
+      0.0,
+      -0.153,
+      0.153,
+      -0.44
+    ],
+    "keywords": [
+      "long threads",
+      "summarise long",
+      "draft emails",
+      "threads",
+      "chatgpt",
+      "morning",
+      "emails",
+      "summarise"
+    ]
+  },
+  "created_at": "2026-11-22T09:14:03.486850Z",
+  "completed_at": "2026-11-22T09:14:13.122847Z",
+  "awaiting_summary": false
+}
