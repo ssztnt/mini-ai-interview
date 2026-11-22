@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Interview data (one sample is committed for reviewers)
+backend/data/interviews/*
+!backend/data/interviews/.gitkeep
+!backend/data/interviews/sample-*.json
+
+# Local tooling
+.vibe-wise/
+.DS_Store
+.idea/
+.vscode/
