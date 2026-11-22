@@ -13,7 +13,9 @@ A simplified take on [Anthropic Interviewer](https://www.anthropic.com/news/anth
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
 
-<img src="docs/screenshots/summary.png" alt="Interview summary with highlighted quotes" width="720" />
+<img src="docs/demo/demo.gif" alt="Demo: a rude topic is rejected, then the AI drafts a plan, asks three adaptive questions and writes a summary" width="720" />
+
+<sub>A real run on gpt-5.4-mini (Microsoft Foundry) with example answers, sped up 1.6×. <a href="docs/demo/demo.mp4">Watch in full quality (MP4, 74 s)</a></sub>
 
 </div>
 
@@ -38,6 +40,14 @@ A simplified take on [Anthropic Interviewer](https://www.anthropic.com/news/anth
   <tr>
     <td align="center"><sub>Review and edit the AI's plan</sub></td>
     <td align="center"><sub>Questions adapt to what you said</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/summary.png" alt="Interview summary with highlighted quotes" /></td>
+    <td><img src="docs/screenshots/history.png" alt="Past interviews" /></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>A summary grounded in your own words</sub></td>
+    <td align="center"><sub>Every interview is saved</sub></td>
   </tr>
 </table>
 
@@ -175,7 +185,7 @@ mini-ai-interview/
 │       ├── api/              typed client mirroring backend models
 │       ├── screens/          Start · Plan · Interview · Analyzing · Summary · History
 │       └── useInterview.ts   session state + refresh-safe resume
-├── docs/                     architecture notes, screenshots
+├── docs/                     architecture notes, screenshots, demo video
 └── compose.yaml              backend + nginx-served frontend
 ```
 
