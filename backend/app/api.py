@@ -6,7 +6,13 @@ from fastapi import APIRouter, Depends, Request, status
 from pydantic import BaseModel
 
 from app.config import LLMConfig, Provider
-from app.models import AnswerRequest, CreateInterviewRequest, Interview, UpdatePlanRequest
+from app.models import (
+    AnswerRequest,
+    CreateInterviewRequest,
+    Interview,
+    InterviewListItem,
+    UpdatePlanRequest,
+)
 from app.services import InterviewService
 
 router = APIRouter(prefix="/api")
@@ -47,6 +53,12 @@ def create_interview(body: CreateInterviewRequest, service: Service) -> Intervie
     return service.create(body.topic, body.num_questions)
 
 
+@router.get("/interviews", response_model=list[InterviewListItem], tags=["interviews"])
+def list_interviews(service: Service) -> list[InterviewListItem]:
+    """Completed interviews, newest first."""
+    return [InterviewListItem.from_interview(i) for i in service.list_completed()]
+
+
 @router.get("/interviews/{interview_id}", response_model=Interview, tags=["interviews"])
 def read_interview(interview_id: str, service: Service) -> Interview:
     return service.get(interview_id)
@@ -68,3 +80,9 @@ def start_interview(interview_id: str, service: Service) -> Interview:
 def submit_answer(interview_id: str, body: AnswerRequest, service: Service) -> Interview:
     """Store the answer to the open question and generate the next, adapted question."""
     return service.answer(interview_id, body.answer)
+
+
+@router.post("/interviews/{interview_id}/complete", response_model=Interview, tags=["interviews"])
+def complete_interview(interview_id: str, service: Service) -> Interview:
+    """Generate the AI summary and classic analysis, then save the interview to disk."""
+    return service.complete(interview_id)

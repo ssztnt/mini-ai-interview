@@ -11,6 +11,7 @@ from typing import Any, TypeVar
 
 from pydantic import BaseModel
 
+from app.models import Emotion, Finding, Sentiment, Summary, Theme
 from app.prompts import InterviewerOutput, PlannedObjective, PlannerOutput
 
 T = TypeVar("T", bound=BaseModel)
@@ -34,6 +35,7 @@ class DemoClient:
         self._responders: dict[type[BaseModel], Callable[[str], Any]] = {
             PlannerOutput: self._plan,
             InterviewerOutput: self._question,
+            Summary: self._summary,
         }
 
     def register(self, schema: type[BaseModel], responder: Callable[[str], Any]) -> None:
@@ -79,4 +81,37 @@ class DemoClient:
             lead_in=lead_in,
             question=f"Thinking about {theme}, could you share a recent, concrete example "
             f"of how that plays out for you with {topic}?",
+        )
+
+    @staticmethod
+    def _summary(user: str) -> Summary:
+        topic = read_tag(user, "topic", "this topic")
+        transcript = read_tag(user, "transcript")
+        themes = re.findall(r"^Q\d+ \[objective \d+: (.+?)\]:", transcript, re.MULTILINE)
+        answers = re.findall(r"^A\d+: (.+)$", transcript, re.MULTILINE)
+        return Summary(
+            overview=(
+                f"(Demo mode) The participant shared their experience with {topic} across "
+                f"{len(answers)} questions. Add an API key to get a real AI-written summary."
+            ),
+            findings=[
+                Finding(
+                    objective=theme,
+                    finding=f"The participant described their perspective on {theme.lower()}.",
+                    quote=" ".join(answer.split()[:12]),
+                )
+                for theme, answer in zip(themes, answers, strict=False)
+            ],
+            themes=[
+                Theme(name="Personal experience", description=f"How {topic} fits their routine."),
+                Theme(name="Room to improve", description="Points where expectations fall short."),
+            ],
+            key_points=[
+                f"Answered {len(answers)} questions about {topic}.",
+                "This summary is a placeholder generated without an LLM.",
+                "Set OPENAI_API_KEY or Foundry settings in .env for real analysis.",
+            ],
+            sentiment=Sentiment(label="neutral", score=0.0, rationale="Demo mode does not score."),
+            emotions=[Emotion(name="curiosity", intensity="medium")],
+            keywords=[topic.lower(), "experience", "demo"],
         )

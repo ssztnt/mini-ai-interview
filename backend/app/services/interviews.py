@@ -6,6 +6,8 @@ writes text. Status flow::
     planning ──start──▶ in_progress ──complete──▶ completed
 """
 
+import re
+
 from app.config import LLMConfig
 from app.llm import LLMClient, LLMError
 from app.models import (
@@ -14,17 +16,20 @@ from app.models import (
     Interview,
     Objective,
     Status,
+    Summary,
     Turn,
     utc_now,
 )
 from app.prompts import (
     InterviewerOutput,
     PlannerOutput,
+    analyst_message,
     interviewer_message,
     load_prompt,
     planner_message,
 )
-from app.storage import InMemoryInterviewRepository
+from app.services.analysis import analyze_answers
+from app.storage import InMemoryInterviewRepository, JsonInterviewStore
 
 
 class InterviewNotFound(LookupError):
@@ -41,18 +46,24 @@ class InterviewService:
         llm: LLMClient,
         llm_config: LLMConfig,
         repository: InMemoryInterviewRepository,
+        store: JsonInterviewStore,
     ) -> None:
         self._llm = llm
         self._llm_config = llm_config
         self._repo = repository
+        self._store = store
 
     # ── Lookup ────────────────────────────────────────────────
 
     def get(self, interview_id: str) -> Interview:
-        interview = self._repo.get(interview_id)
+        """In-progress interviews live in memory; completed ones on disk."""
+        interview = self._repo.get(interview_id) or self._store.get(interview_id)
         if interview is None:
             raise InterviewNotFound(interview_id)
         return interview
+
+    def list_completed(self) -> list[Interview]:
+        return self._store.list()
 
     def _require(self, interview_id: str, status: Status) -> Interview:
         interview = self.get(interview_id)
@@ -124,6 +135,31 @@ class InterviewService:
         self._repo.save(updated)
         return updated
 
+    # ── Analysis ──────────────────────────────────────────────
+
+    def complete(self, interview_id: str) -> Interview:
+        """Summarise with the LLM, add the classic baseline, and persist to disk."""
+        interview = self._require(interview_id, Status.IN_PROGRESS)
+        if not interview.awaiting_summary:
+            raise InvalidState("All questions must be answered before summarising")
+
+        summary = self._llm.generate(
+            system=load_prompt("analyst"),
+            user=analyst_message(interview),
+            schema=Summary,
+        )
+        answers = [t.answer or "" for t in interview.turns]
+
+        updated = interview.model_copy(deep=True)
+        updated.summary = keep_verbatim_quotes(summary, answers)
+        updated.analysis = analyze_answers(answers)
+        updated.status = Status.COMPLETED
+        updated.completed_at = utc_now()
+
+        self._store.save(updated)
+        self._repo.delete(interview_id)
+        return updated
+
     def _ask_next(self, interview: Interview) -> None:
         objective_index = len(interview.turns)
         result = self._llm.generate(
@@ -138,3 +174,20 @@ class InterviewService:
                 question=result.question.strip(),
             )
         )
+
+
+def _normalise(text: str) -> str:
+    return re.sub(r"\s+", " ", text).strip().strip("\"'“”‘’").lower()
+
+
+def keep_verbatim_quotes(summary: Summary, answers: list[str]) -> Summary:
+    """Drop any quote that does not appear in the participant's answers.
+
+    Models sometimes "tidy up" quotes; a quote attributed to the participant
+    must be their actual words, so unverifiable ones are blanked.
+    """
+    corpus = _normalise(" ".join(answers))
+    for finding in summary.findings:
+        if finding.quote and _normalise(finding.quote) not in corpus:
+            finding.quote = ""
+    return summary

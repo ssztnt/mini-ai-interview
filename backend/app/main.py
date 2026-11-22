@@ -11,7 +11,7 @@ from app.config import LLMConfig, get_settings, resolve_llm_config
 from app.llm import LLMClient, LLMError, OpenAIClient
 from app.llm.demo import DemoClient
 from app.services import InterviewNotFound, InterviewService, InvalidState
-from app.storage import InMemoryInterviewRepository
+from app.storage import InMemoryInterviewRepository, JsonInterviewStore
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +28,7 @@ def create_app(
     *,
     llm_config: LLMConfig | None = None,
     llm: LLMClient | None = None,
+    store: JsonInterviewStore | None = None,
 ) -> FastAPI:
     settings = get_settings()
     llm_config = llm_config or resolve_llm_config(settings)
@@ -39,7 +40,8 @@ def create_app(
         description="Short, adaptive AI-led interviews with an AI-generated summary.",
     )
     app.state.llm_config = llm_config
-    app.state.service = InterviewService(llm, llm_config, InMemoryInterviewRepository())
+    store = store or JsonInterviewStore(settings.data_dir)
+    app.state.service = InterviewService(llm, llm_config, InMemoryInterviewRepository(), store)
 
     app.add_middleware(
         CORSMiddleware,
