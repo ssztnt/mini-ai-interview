@@ -151,6 +151,7 @@ class InterviewService:
         answers = [t.answer or "" for t in interview.turns]
 
         updated = interview.model_copy(deep=True)
+        summary = label_findings(summary, interview.plan)
         updated.summary = keep_verbatim_quotes(summary, answers)
         updated.analysis = analyze_answers(answers)
         updated.status = Status.COMPLETED
@@ -190,4 +191,17 @@ def keep_verbatim_quotes(summary: Summary, answers: list[str]) -> Summary:
     for finding in summary.findings:
         if finding.quote and _normalise(finding.quote) not in corpus:
             finding.quote = ""
+    return summary
+
+
+def label_findings(summary: Summary, plan: list[Objective]) -> Summary:
+    """Name each finding after its plan objective.
+
+    Findings are requested one per objective, in plan order. The label comes
+    from the plan itself rather than from the model, which sometimes copies
+    the whole "theme: goal" line.
+    """
+    if len(summary.findings) == len(plan):
+        for finding, objective in zip(summary.findings, plan, strict=True):
+            finding.objective = objective.theme
     return summary
