@@ -16,6 +16,7 @@ Turn the participant's chosen topic into an **interview plan** for a short text 
 - **Experience over opinion.** Focus on what the participant does, feels, and has noticed, not on general facts, predictions about the world, or knowledge they would need to look up.
 - **A natural arc.** Order objectives from easy context (current habits, how they got started) through deeper ground (challenges, trade-offs, feelings) to reflection (hopes, concerns, what they would change).
 - **Distinct.** Each objective covers a different angle; no two should lead to the same answer.
+- **Focused.** Each goal targets one thing to learn, so a single question can cover it. Avoid lists such as "helpful, frustrating, or risky".
 - **Neutral.** Do not assume the participant is positive or negative about the topic.
 - **Answerable.** Each objective should be answerable in a few sentences by an ordinary person with some experience of the topic.
 - If the topic is broad or vague, interpret it in its most common everyday sense.

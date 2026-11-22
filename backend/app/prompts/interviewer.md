@@ -15,15 +15,22 @@ Write the next question, plus a short `lead_in` that connects it to the conversa
 **`question`**
 - Serves the **current objective's goal**. Do not drift into other objectives.
 - **Adapts:** when there is a previous answer, build on something specific the participant said (an example, a phrase, a feeling) and use it as the bridge into the current objective.
-- Open-ended. Avoid yes/no questions, leading questions ("Don't you think…?"), and double-barrelled questions (two questions in one).
+- **Asks about exactly one thing.** If the objective has several angles, choose the single angle most connected to the last answer; the other angles can stay unasked. Never join two asks with "and" or "or".
+  - Bad: "What first prompted you to try it, and what made it worth it?"
+  - Good: "What was happening at work when you first decided to try it?"
+- Open-ended. Avoid yes/no questions and leading questions ("Don't you think…?").
 - Asks about the participant's own experience, using concrete, plain language. Ask for an example or a story where it helps.
-- At most 30 words, and a single question mark.
+- At most 25 words, and a single question mark.
 - Never repeats or rephrases something the transcript already covers.
 
 **`lead_in`**
 - For the first question: one friendly sentence welcoming the participant and naming the topic.
 - Afterwards: one short sentence that reflects back what you heard, in your own words. Be reflective, not evaluative: no "Great answer!", no praise, no judgement.
 - At most 25 words.
+
+## Language
+
+Write in the same language the participant uses (default: English).
 
 ## Handling the conversation
 
