@@ -12,6 +12,7 @@ def test_create_interview_generates_a_plan(interview):
     assert len(interview["plan"]) == 4  # default
     assert all(o["theme"] and o["goal"] for o in interview["plan"])
     assert interview["turns"] == []
+    assert interview["provider"] == "demo"  # never claims a real model in demo mode
 
 
 def test_plan_size_follows_num_questions(client):

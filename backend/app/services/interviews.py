@@ -89,8 +89,8 @@ class InterviewService:
 
         interview = Interview(
             topic=topic,
-            provider=self._llm_config.provider,
-            model=self._llm_config.model,
+            provider="demo" if self._llm_config.demo else self._llm_config.provider,
+            model="canned responses" if self._llm_config.demo else self._llm_config.model,
             research_goal=result.research_goal.strip(),
             plan=objectives,
         )
