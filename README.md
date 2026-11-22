@@ -130,6 +130,19 @@ Across all three:
 - **Data vs instructions.** User input is wrapped in XML-style tags and the prompts say to treat it as data, which is a basic guard against prompt injection.
 - **Trust, but verify.** Quotes the analyst attributes to the participant are checked against the real answers, and any that don't match are dropped.
 
+### Content filter
+
+Everything the participant types (topic, plan edits, answers) is checked for profanity **before** it reaches the model. If it contains a blocked word, the request is rejected, the field is cleared, and the user is asked to rephrase.
+
+| `CONTENT_FILTER` | Blocks | Examples |
+|---|---|---|
+| `mild` (default) | all three tiers | "hell", "damn" and everything below |
+| `moderate` | moderate + strong | "shit", "bastard" |
+| `strong` | strong only | "fuck" |
+| `off` | nothing | |
+
+The tiers follow [Ofcom's research on offensive language](https://www.ofcom.org.uk/tv-radio-and-on-demand/broadcast-standards/offensive-language). Matching works on whole words, so "hello" and "shell" pass, and catches simple disguises such as "fuuuck" and "sh1t". Hate, sexual and violent content is left to the provider: Microsoft Foundry's built-in Content Safety blocks it at medium severity by default, and the app shows that rejection the same way.
+
 ## Project structure
 
 ```
@@ -178,7 +191,7 @@ Each completed interview is written to `backend/data/interviews/<date>_<id>.json
 ## Development
 
 ```bash
-cd backend  && uv run pytest && uv run ruff check .        # 37 offline tests
+cd backend  && uv run pytest && uv run ruff check .        # 55 offline tests
 cd frontend && npm run lint && npm run build
 ```
 

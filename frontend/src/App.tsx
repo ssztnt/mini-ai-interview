@@ -50,12 +50,17 @@ export default function App() {
         />
       )
     }
-    if (!interview) return <StartScreen busy={busy} error={error} onCreate={session.create} />
+    // Keying on resetCount clears a form whose wording the backend rejected.
+    const reset = session.resetCount
+    if (!interview) {
+      return <StartScreen key={reset} busy={busy} error={error} onCreate={session.create} />
+    }
 
     switch (interview.status) {
       case 'planning':
         return (
           <PlanScreen
+            key={reset}
             interview={interview}
             busy={busy}
             error={error}
@@ -68,7 +73,7 @@ export default function App() {
           <AnalyzingScreen error={error} onRetry={session.complete} />
         ) : (
           <InterviewScreen
-            key={interview.turns.length}
+            key={`${interview.turns.length}-${reset}`}
             interview={interview}
             busy={busy}
             error={error}

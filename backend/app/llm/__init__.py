@@ -1,3 +1,3 @@
-from app.llm.client import LLMClient, LLMError, OpenAIClient
+from app.llm.client import ContentFiltered, LLMClient, LLMError, OpenAIClient
 
-__all__ = ["LLMClient", "LLMError", "OpenAIClient"]
+__all__ = ["ContentFiltered", "LLMClient", "LLMError", "OpenAIClient"]

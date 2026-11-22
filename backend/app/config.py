@@ -21,6 +21,7 @@ BACKEND_DIR = Path(__file__).resolve().parent.parent
 REPO_ROOT = BACKEND_DIR.parent
 
 Provider = Literal["openai", "foundry"]
+FilterLevel = Literal["off", "mild", "moderate", "strong"]
 
 
 class Settings(BaseSettings):
@@ -41,6 +42,9 @@ class Settings(BaseSettings):
     foundry_endpoint: str | None = None
     foundry_api_key: str | None = None
     foundry_deployment: str = "gpt-5.4-mini"
+
+    # Lowest swear-word tier to block: off | mild | moderate | strong
+    content_filter: FilterLevel = "mild"
 
     data_dir: Path = BACKEND_DIR / "data" / "interviews"
     cors_origins: list[str] = ["http://localhost:5173"]

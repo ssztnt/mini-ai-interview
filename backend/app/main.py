@@ -8,9 +8,15 @@ from fastapi.responses import JSONResponse
 
 from app.api import router
 from app.config import LLMConfig, get_settings, resolve_llm_config
-from app.llm import LLMClient, LLMError, OpenAIClient
+from app.llm import ContentFiltered, LLMClient, LLMError, OpenAIClient
 from app.llm.demo import DemoClient
-from app.services import InterviewNotFound, InterviewService, InvalidState
+from app.services import (
+    ContentFilter,
+    InappropriateLanguage,
+    InterviewNotFound,
+    InterviewService,
+    InvalidState,
+)
 from app.storage import InMemoryInterviewRepository, JsonInterviewStore
 
 logger = logging.getLogger(__name__)
@@ -20,8 +26,9 @@ def build_llm(config: LLMConfig) -> LLMClient:
     return DemoClient() if config.demo else OpenAIClient(config)
 
 
-def error(status_code: int, message: str) -> JSONResponse:
-    return JSONResponse(status_code=status_code, content={"detail": message})
+def error(status_code: int, message: str, code: str | None = None) -> JSONResponse:
+    content = {"detail": message} | ({"code": code} if code else {})
+    return JSONResponse(status_code=status_code, content=content)
 
 
 def create_app(
@@ -41,7 +48,13 @@ def create_app(
     )
     app.state.llm_config = llm_config
     store = store or JsonInterviewStore(settings.data_dir)
-    app.state.service = InterviewService(llm, llm_config, InMemoryInterviewRepository(), store)
+    app.state.service = InterviewService(
+        llm,
+        llm_config,
+        InMemoryInterviewRepository(),
+        store,
+        ContentFilter(settings.content_filter),
+    )
 
     app.add_middleware(
         CORSMiddleware,
@@ -58,6 +71,19 @@ def create_app(
     @app.exception_handler(InvalidState)
     def _invalid_state(_: Request, exc: InvalidState) -> JSONResponse:
         return error(status.HTTP_409_CONFLICT, str(exc))
+
+    # The UI clears the offending field when it sees this code.
+    @app.exception_handler(InappropriateLanguage)
+    def _inappropriate(_: Request, exc: InappropriateLanguage) -> JSONResponse:
+        return error(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc), "inappropriate_language")
+
+    @app.exception_handler(ContentFiltered)
+    def _content_filtered(_: Request, __: ContentFiltered) -> JSONResponse:
+        message = (
+            "This text was blocked by the AI provider's safety filter. "
+            "It has been cleared. Please rephrase it and try again."
+        )
+        return error(status.HTTP_422_UNPROCESSABLE_CONTENT, message, "inappropriate_language")
 
     @app.exception_handler(LLMError)
     def _llm_error(_: Request, exc: LLMError) -> JSONResponse:

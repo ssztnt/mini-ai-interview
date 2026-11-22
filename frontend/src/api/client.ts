@@ -2,10 +2,13 @@ import type { AppConfig, Interview, InterviewListItem, Objective } from './types
 
 export class ApiError extends Error {
   readonly status: number
+  /** Machine-readable reason, e.g. 'inappropriate_language'. */
+  readonly code: string | null
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, code: string | null = null) {
     super(message)
     this.status = status
+    this.code = code
   }
 }
 
@@ -32,7 +35,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
         : Array.isArray(detail)
           ? detail.map((d: { msg: string }) => d.msg).join('. ')
           : `Request failed (${response.status})`
-    throw new ApiError(response.status, message)
+    throw new ApiError(response.status, message, body?.code ?? null)
   }
   return response.json() as Promise<T>
 }

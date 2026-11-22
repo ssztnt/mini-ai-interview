@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { api } from './api/client'
+import { ApiError, api } from './api/client'
 import type { Interview, Objective } from './api/types'
 
 const STORAGE_KEY = 'mini-ai-interview:current'
@@ -23,6 +23,9 @@ export function useInterview() {
   const [error, setError] = useState<string | null>(null)
   const [savedId] = useState(readSavedId)
   const [restoring, setRestoring] = useState(savedId !== null)
+  // Bumped when the backend rejects the user's wording; screens use it as a
+  // React key, so the rejected input is cleared by re-mounting the form.
+  const [resetCount, setResetCount] = useState(0)
 
   const setInterview = useCallback((next: Interview | null) => {
     setInterviewState(next)
@@ -51,6 +54,9 @@ export function useInterview() {
         setInterview(await action())
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Something went wrong.')
+        if (e instanceof ApiError && e.code === 'inappropriate_language') {
+          setResetCount((n) => n + 1)
+        }
       } finally {
         setBusy(false)
       }
@@ -86,5 +92,5 @@ export function useInterview() {
     }
   })
 
-  return { interview, busy, error, restoring, ...actions }
+  return { interview, busy, error, restoring, resetCount, ...actions }
 }

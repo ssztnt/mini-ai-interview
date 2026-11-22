@@ -84,6 +84,19 @@ The bonus analysis runs **VADER** (lexicon-based sentiment) and **YAKE** (statis
 
 Microsoft Foundry exposes an OpenAI-compatible `/openai/v1/` endpoint, so a single `OpenAIClient` covers OpenAI, Foundry, and any OpenAI-compatible server. `LLM_PROVIDER` only changes the base URL, key, and model name. With no key, a `DemoClient` implementing the same interface stands in, which is also what the test suite uses.
 
+### Content filter: two layers
+
+Swearing and harmful content are different problems, so two layers handle them:
+
+| Layer | Catches | How |
+|---|---|---|
+| App word list ([`moderation.py`](../backend/app/services/moderation.py)) | Profanity, in Ofcom's three tiers: mild, moderate, strong | Whole-word regex, run before any LLM call; the level is set by `CONTENT_FILTER` |
+| Provider (Azure AI Content Safety on Foundry) | Hate, sexual, violence, self-harm, scored safe / low / medium / high | Built in; blocks medium and above by default. Its `content_filter` error is mapped to the same response |
+
+Both layers return `422` with `code: "inappropriate_language"`. The UI clears the rejected field, which it does by re-mounting the form with a new React `key`. The check runs in the service rather than the browser, so it can't be bypassed, and rejected text is never sent to the model or saved.
+
+The default is the strictest level (`mild`, which blocks "hell") because an interview is a professional setting. The trade-off is that a participant can't quote a strong reaction word for word ("it was hell"). Teams that prefer that can relax it in `.env`.
+
 ### Storage
 
 | Data | Where | Why |
@@ -108,6 +121,7 @@ The pattern: **state rules in the prompt, enforce what matters in code.** Quotes
 - In-progress interviews are lost if the server restarts.
 - JSON-file listing scans the folder, which is fine for hundreds of interviews but not millions.
 - No authentication: this is a local, single-user proof of concept.
+- The word list is English-only and can be beaten by spacing letters out ("f u c k"). A hosted moderation API would be the next step.
 - Text only. As Anthropic notes for their own tool, tone of voice and hesitation are lost.
 
 ## Next steps
