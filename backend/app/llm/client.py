@@ -36,7 +36,8 @@ class OpenAIClient:
             api_key=config.api_key,
             base_url=config.base_url,
             timeout=60,
-            max_retries=2,  # SDK-level retries for network errors / 429 / 5xx
+            # SDK-level retries with backoff: dropped connections, 429s and 5xx.
+            max_retries=4,
         )
 
     def generate(self, *, system: str, user: str, schema: type[T]) -> T:

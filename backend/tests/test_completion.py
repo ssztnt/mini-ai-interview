@@ -1,6 +1,6 @@
-from app.models import Finding, Sentiment, Summary
+from app.models import Finding, Objective, Sentiment, Summary
 from app.services.analysis import analyze_answers, label_for
-from app.services.interviews import keep_verbatim_quotes
+from app.services.interviews import keep_verbatim_quotes, label_findings
 
 
 def complete(client, interview_id):
@@ -96,3 +96,10 @@ def test_verbatim_quotes_are_kept_and_invented_ones_dropped():
     )
     assert summary.findings[0].quote == '"I use it every day"'  # whitespace/quotes tolerated
     assert summary.findings[1].quote == ""  # paraphrase, not verbatim
+
+
+def test_findings_are_labelled_from_the_plan():
+    summary = make_summary(["q1", "q2"])
+    summary.findings[0].objective = "Setup: Learn about their setup."  # model copied too much
+    plan = [Objective(theme="Setup", goal="g"), Objective(theme="Focus", goal="g")]
+    assert [f.objective for f in label_findings(summary, plan).findings] == ["Setup", "Focus"]
