@@ -2,7 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.config import Settings, foundry_base_url, resolve_llm_config
-from app.main import create_app, get_llm_config
+from app.main import create_app
 
 
 def make_settings(**overrides) -> Settings:
@@ -61,9 +61,9 @@ def test_foundry_base_url_normalisation(endpoint):
 
 
 def test_config_endpoint_never_exposes_the_key():
-    app = create_app()
-    app.dependency_overrides[get_llm_config] = lambda: resolve_llm_config(
-        make_settings(openai_api_key="sk-secret")
+    app = create_app(
+        llm_config=resolve_llm_config(make_settings(openai_api_key="sk-secret")),
+        llm=object(),  # never called by /api/config
     )
     response = TestClient(app).get("/api/config")
 
