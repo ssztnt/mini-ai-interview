@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from uuid import uuid4
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 
 MIN_QUESTIONS = 3
 MAX_QUESTIONS = 5
@@ -61,6 +61,16 @@ class Interview(BaseModel):
     created_at: datetime = Field(default_factory=utc_now)
     completed_at: datetime | None = None
 
+    @computed_field
+    @property
+    def awaiting_summary(self) -> bool:
+        """All plan questions are answered; the next step is the summary."""
+        return (
+            self.status == Status.IN_PROGRESS
+            and len(self.turns) == len(self.plan)
+            and self.turns[-1].answer is not None
+        )
+
     @property
     def current_turn(self) -> Turn | None:
         """The question currently waiting for an answer, if any."""
@@ -79,3 +89,7 @@ class CreateInterviewRequest(BaseModel):
 
 class UpdatePlanRequest(BaseModel):
     objectives: list[Objective] = Field(min_length=MIN_QUESTIONS, max_length=MAX_QUESTIONS)
+
+
+class AnswerRequest(BaseModel):
+    answer: str = Field(min_length=1, max_length=4000)

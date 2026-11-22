@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Request, status
 from pydantic import BaseModel
 
 from app.config import LLMConfig, Provider
-from app.models import CreateInterviewRequest, Interview, UpdatePlanRequest
+from app.models import AnswerRequest, CreateInterviewRequest, Interview, UpdatePlanRequest
 from app.services import InterviewService
 
 router = APIRouter(prefix="/api")
@@ -56,3 +56,15 @@ def read_interview(interview_id: str, service: Service) -> Interview:
 def update_plan(interview_id: str, body: UpdatePlanRequest, service: Service) -> Interview:
     """Replace the plan with the user's edited version (only before starting)."""
     return service.update_plan(interview_id, body.objectives)
+
+
+@router.post("/interviews/{interview_id}/start", response_model=Interview, tags=["interviews"])
+def start_interview(interview_id: str, service: Service) -> Interview:
+    """Lock the plan and generate the first question."""
+    return service.start(interview_id)
+
+
+@router.post("/interviews/{interview_id}/answers", response_model=Interview, tags=["interviews"])
+def submit_answer(interview_id: str, body: AnswerRequest, service: Service) -> Interview:
+    """Store the answer to the open question and generate the next, adapted question."""
+    return service.answer(interview_id, body.answer)

@@ -11,7 +11,7 @@ from typing import Any, TypeVar
 
 from pydantic import BaseModel
 
-from app.prompts import PlannedObjective, PlannerOutput
+from app.prompts import InterviewerOutput, PlannedObjective, PlannerOutput
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -33,6 +33,7 @@ class DemoClient:
     def __init__(self) -> None:
         self._responders: dict[type[BaseModel], Callable[[str], Any]] = {
             PlannerOutput: self._plan,
+            InterviewerOutput: self._question,
         }
 
     def register(self, schema: type[BaseModel], responder: Callable[[str], Any]) -> None:
@@ -58,4 +59,24 @@ class DemoClient:
                 )
                 for i in sorted(indices)
             ],
+        )
+
+    @staticmethod
+    def _question(user: str) -> InterviewerOutput:
+        topic = read_tag(user, "topic", "this topic")
+        objective = read_tag(user, "current_objective", "1. Experience: ")
+        theme = objective.split(". ", 1)[-1].split(":", 1)[0].strip().lower()
+        transcript = read_tag(user, "transcript")
+        answers = re.findall(r"^A\d+: (.+)$", transcript, re.MULTILINE)
+
+        if not answers:
+            lead_in = f"Thanks for joining. Let's talk about {topic}."
+        else:
+            snippet = answers[-1].strip().rstrip(".")
+            snippet = snippet if len(snippet) <= 60 else snippet[:57].rstrip() + "…"
+            lead_in = f"Interesting. You mentioned “{snippet}”."
+        return InterviewerOutput(
+            lead_in=lead_in,
+            question=f"Thinking about {theme}, could you share a recent, concrete example "
+            f"of how that plays out for you with {topic}?",
         )

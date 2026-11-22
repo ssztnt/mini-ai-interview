@@ -8,8 +8,22 @@ writes text. Status flow::
 
 from app.config import LLMConfig
 from app.llm import LLMClient, LLMError
-from app.models import MAX_QUESTIONS, MIN_QUESTIONS, Interview, Objective, Status
-from app.prompts import PlannerOutput, load_prompt, planner_message
+from app.models import (
+    MAX_QUESTIONS,
+    MIN_QUESTIONS,
+    Interview,
+    Objective,
+    Status,
+    Turn,
+    utc_now,
+)
+from app.prompts import (
+    InterviewerOutput,
+    PlannerOutput,
+    interviewer_message,
+    load_prompt,
+    planner_message,
+)
 from app.storage import InMemoryInterviewRepository
 
 
@@ -79,3 +93,48 @@ class InterviewService:
         interview.plan = objectives
         self._repo.save(interview)
         return interview
+
+    # ── Interviewing ──────────────────────────────────────────
+
+    def start(self, interview_id: str) -> Interview:
+        """Lock the plan and ask the first question."""
+        interview = self._require(interview_id, Status.PLANNING)
+        updated = interview.model_copy(deep=True)
+        updated.status = Status.IN_PROGRESS
+        self._ask_next(updated)
+        self._repo.save(updated)
+        return updated
+
+    def answer(self, interview_id: str, answer: str) -> Interview:
+        """Record the answer and, unless the plan is finished, ask the next question.
+
+        Works on a copy so the stored interview only changes if everything
+        succeeds: if the LLM fails, the user can simply resubmit the answer.
+        """
+        interview = self._require(interview_id, Status.IN_PROGRESS)
+        if interview.current_turn is None:
+            raise InvalidState("There is no open question to answer")
+
+        updated = interview.model_copy(deep=True)
+        turn = updated.current_turn
+        turn.answer = answer.strip()
+        turn.answered_at = utc_now()
+        if len(updated.turns) < len(updated.plan):
+            self._ask_next(updated)
+        self._repo.save(updated)
+        return updated
+
+    def _ask_next(self, interview: Interview) -> None:
+        objective_index = len(interview.turns)
+        result = self._llm.generate(
+            system=load_prompt("interviewer"),
+            user=interviewer_message(interview, objective_index),
+            schema=InterviewerOutput,
+        )
+        interview.turns.append(
+            Turn(
+                objective_index=objective_index,
+                lead_in=result.lead_in.strip(),
+                question=result.question.strip(),
+            )
+        )
