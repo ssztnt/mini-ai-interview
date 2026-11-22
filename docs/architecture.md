@@ -91,6 +91,18 @@ Microsoft Foundry exposes an OpenAI-compatible `/openai/v1/` endpoint, so a sing
 | In-progress interviews | In-memory repository | Fast and simple; behind a small interface so it can be swapped later |
 | Completed interviews | One JSON file each | Human-readable, so reviewers can open them directly; written atomically (temp file + rename) |
 
+## Prompt iteration from real runs
+
+Testing full interviews against gpt-5.4-mini on Microsoft Foundry surfaced issues that unit tests with the demo client can't catch:
+
+| Observed | Change |
+|---|---|
+| Follow-ups joined two asks: "What first prompted you to try it, **and** what made it worth trying?" | The interviewer asks about exactly one thing (with a bad/good example), and planner goals became single-focus |
+| A sentiment rationale contained a Hindi word mid-sentence | Analyst and interviewer are pinned to the participant's language |
+| Finding labels copied the whole "theme: goal" line | Labels are now set from the plan in code |
+
+The pattern: **state rules in the prompt, enforce what matters in code.** Quotes, labels, and plan size are verified after parsing instead of trusted.
+
 ## Limitations
 
 - In-progress interviews are lost if the server restarts.

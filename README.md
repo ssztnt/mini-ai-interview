@@ -173,12 +173,12 @@ Each interview moves through `planning → in_progress → completed`, and out-o
 
 ## Stored data
 
-Each completed interview is written to `backend/data/interviews/<date>_<id>.json` and holds the topic, model, plan, full transcript with timestamps, the AI summary, and the classic analysis. See [the sample interview](backend/data/interviews/) for a complete example.
+Each completed interview is written to `backend/data/interviews/<date>_<id>.json` and holds the topic, model, plan, full transcript with timestamps, the AI summary, and the classic analysis. See [`sample-ai-in-the-workplace.json`](backend/data/interviews/sample-ai-in-the-workplace.json): a real run on gpt-5.4-mini (Microsoft Foundry) with example answers. The screenshots above come from the same run.
 
 ## Development
 
 ```bash
-cd backend  && uv run pytest && uv run ruff check .        # 36 offline tests
+cd backend  && uv run pytest && uv run ruff check .        # 37 offline tests
 cd frontend && npm run lint && npm run build
 ```
 
