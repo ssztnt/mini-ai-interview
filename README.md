@@ -11,6 +11,7 @@ A simplified take on [Anthropic Interviewer](https://www.anthropic.com/news/anth
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
 
 <img src="docs/screenshots/summary.png" alt="Interview summary with highlighted quotes" width="720" />
 
@@ -42,13 +43,23 @@ A simplified take on [Anthropic Interviewer](https://www.anthropic.com/news/anth
 
 ## Quick start
 
-**Prerequisites:** [uv](https://docs.astral.sh/uv/getting-started/installation/) (installs Python 3.12 for you) and Node.js 20.19+ (or 22+).
-
 ```bash
 git clone https://github.com/ssztnt/mini-ai-interview.git
 cd mini-ai-interview
 cp .env.example .env          # optional: add an API key (see below)
 ```
+
+#### Option 1: Docker (one command)
+
+```bash
+docker compose up --build
+```
+
+Open **http://localhost:8080**. API docs are at http://localhost:8000/docs. Completed interviews are kept in a Docker volume, so they survive restarts.
+
+#### Option 2: Run locally
+
+**Prerequisites:** [uv](https://docs.astral.sh/uv/getting-started/installation/) (installs Python 3.12 for you) and Node.js 20.19+ (or 22+).
 
 ```bash
 # Terminal 1: API on http://localhost:8000
@@ -67,7 +78,7 @@ Open **http://localhost:5173**.
 
 ### Connect a model
 
-Pick **one** option in `.env`, then restart the backend.
+Pick **one** option in `.env`, then restart the backend (or re-run `docker compose up`).
 
 <details open>
 <summary><b>Option A: OpenAI</b> (simplest)</summary>
@@ -164,7 +175,8 @@ mini-ai-interview/
 │       ├── api/              typed client mirroring backend models
 │       ├── screens/          Start · Plan · Interview · Analyzing · Summary · History
 │       └── useInterview.ts   session state + refresh-safe resume
-└── docs/                     architecture notes, screenshots
+├── docs/                     architecture notes, screenshots
+└── compose.yaml              backend + nginx-served frontend
 ```
 
 ## API
@@ -195,7 +207,7 @@ cd backend  && uv run pytest && uv run ruff check .        # 55 offline tests
 cd frontend && npm run lint && npm run build
 ```
 
-CI runs both on every pull request.
+CI runs both on every pull request, and checks that the Docker images build.
 
 ## Design decisions & limitations
 
