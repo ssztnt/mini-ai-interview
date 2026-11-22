@@ -29,6 +29,7 @@ from app.prompts import (
     planner_message,
 )
 from app.services.analysis import analyze_answers
+from app.services.moderation import ContentFilter
 from app.storage import InMemoryInterviewRepository, JsonInterviewStore
 
 
@@ -47,11 +48,13 @@ class InterviewService:
         llm_config: LLMConfig,
         repository: InMemoryInterviewRepository,
         store: JsonInterviewStore,
+        content_filter: ContentFilter | None = None,
     ) -> None:
         self._llm = llm
         self._llm_config = llm_config
         self._repo = repository
         self._store = store
+        self._filter = content_filter or ContentFilter()
 
     # ── Lookup ────────────────────────────────────────────────
 
@@ -75,6 +78,8 @@ class InterviewService:
 
     def create(self, topic: str, num_questions: int) -> Interview:
         topic = topic.strip()
+        # Checked before any LLM call, so rejected input never reaches the model.
+        self._filter.check(topic, field="topic")
         result = self._llm.generate(
             system=load_prompt("planner"),
             user=planner_message(topic, num_questions),
@@ -101,6 +106,8 @@ class InterviewService:
         interview = self._require(interview_id, Status.PLANNING)
         if not MIN_QUESTIONS <= len(objectives) <= MAX_QUESTIONS:
             raise InvalidState(f"A plan needs {MIN_QUESTIONS}–{MAX_QUESTIONS} objectives")
+        for objective in objectives:
+            self._filter.check(f"{objective.theme} {objective.goal}", field="plan")
         interview.plan = objectives
         self._repo.save(interview)
         return interview
@@ -125,6 +132,7 @@ class InterviewService:
         interview = self._require(interview_id, Status.IN_PROGRESS)
         if interview.current_turn is None:
             raise InvalidState("There is no open question to answer")
+        self._filter.check(answer, field="answer")
 
         updated = interview.model_copy(deep=True)
         turn = updated.current_turn

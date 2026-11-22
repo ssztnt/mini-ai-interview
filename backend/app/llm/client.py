@@ -22,6 +22,10 @@ class LLMError(RuntimeError):
     """The LLM call failed or returned something unusable."""
 
 
+class ContentFiltered(LLMError):
+    """The provider's own safety filter blocked the prompt (e.g. Azure Content Safety)."""
+
+
 class LLMClient(Protocol):
     def generate(self, *, system: str, user: str, schema: type[T]) -> T:
         """Send a system + user prompt and return a validated `schema` instance."""
@@ -67,6 +71,10 @@ class OpenAIClient:
                 logger.warning("Structured output invalid (attempt %d): %s", attempt, exc)
             except openai.AuthenticationError as exc:
                 raise LLMError("The LLM provider rejected the API key") from exc
+            except openai.BadRequestError as exc:
+                if exc.code == "content_filter":
+                    raise ContentFiltered("The provider's safety filter blocked this text") from exc
+                raise LLMError(f"LLM provider error: {exc}") from exc
             except openai.APIError as exc:
                 raise LLMError(f"LLM provider error: {exc}") from exc
 
